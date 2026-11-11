@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<customUI xmlns="http://schemas.kingsoft.com/office/2009/07/customui" onLoad="OnDeckenAddinLoad">
+  <ribbon startFromScratch="false">
+    <tabs>
+      <tab id="DeckenWpsTab" label="Decken">
+        <group id="DeckenReconstructGroup" label="Native OpenXML">
+          <button
+            id="btnToggleDeckenPane"
+            label="图片转可编辑PPT"
+            supertip="打开 Decken 侧边任务窗格，将任意幻灯片截图、PDF页面或设计图重建为 100% 原生可编辑形状与表格并直接插入当前演示文稿。"
+            onAction="OnToggleDeckenTaskPane"
+            size="large"
+          />
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

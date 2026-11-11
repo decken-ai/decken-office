@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Decken for WPS 演示</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fafafa;
+        --card: #ffffff;
+        --ink: #09090b;
+        --muted: #71717a;
+        --line: #e4e4e7;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #09090b;
+          --card: #18181b;
+          --ink: #fafafa;
+          --muted: #a1a1aa;
+          --line: #27272a;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 14px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        font-size: 13px;
+      }
+      .tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      .tabs button {
+        margin: 0;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .tabs button.active {
+        background: var(--ink);
+        color: var(--bg);
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 12px;
+      }
+      .dropzone {
+        border: 1.5px dashed var(--line);
+        border-radius: 10px;
+        padding: 20px 12px;
+        text-align: center;
+        cursor: pointer;
+      }
+      img.preview {
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        margin-bottom: 8px;
+      }
+      input, select, textarea, button {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--bg);
+        color: var(--ink);
+        font-size: 12px;
+        margin-top: 6px;
+      }
+      textarea { font-family: ui-monospace, SFMono-Regular, monospace; }
+      button.primary {
+        background: var(--ink);
+        color: var(--bg);
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        padding: 10px;
+        margin-top: 10px;
+      }
+      button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+      .status { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <div class="tabs">
+      <button id="tabOutline" class="active" type="button">从大纲生成</button>
+      <button id="tabImprove" type="button">改进文稿 / 截图 (⌘V)</button>
+    </div>
+
+    <div id="panelOutline" class="card">
+      <strong>1 · 大纲 + 可选参考图 / .pptx 模板</strong>
+      <textarea id="outlineInput" rows="5">## 边缘推理架构总览
+- 全球 14 节点 p99 延迟低于 30ms
+- 零拷贝 KV 路由降低 41% 算力成本</textarea>
+      <input id="refInput" type="file" accept="image/png,image/jpeg,image/webp,.pptx,.potx" />
+    </div>
+
+    <div id="panelImprove" class="card" style="display:none;">
+      <strong>1 · 上传粗糙 .pptx 或粘贴幻灯片截图 (⌘V / Ctrl+V)</strong>
+      <div id="dropzone" class="dropzone" style="margin-top:10px;">
+        选择 .pptx 升级视觉排版（100% 保留业务数字），或粘贴任意截图转为原生可编辑形状与表格
+      </div>
+      <img id="imgPreview" class="preview" style="display:none;margin-top:10px;" alt="Slide preview" />
+      <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp,.pptx,.potx" hidden />
+      <input id="promptInput" type="text" placeholder="可选改进要求（如：统一层级与商务配色）" />
+    </div>
+
+    <div class="card">
+      <strong>2 · 内核参数 (POST /v1/decks)</strong>
+      <select id="engineMode">
+        <option value="vlm">VLM + 原生 OpenXML 闭环内核</option>
+        <option value="deterministic">本地确定性几何内核</option>
+      </select>
+      <input id="apiKey" type="password" placeholder="Decken API Key (dk_live_...)" />
+      <button id="runBtn" class="primary">生成并插入当前 WPS 演示文稿</button>
+      <div id="statusMsg" class="status">准备就绪 · 连接 https://api.decken.ai/v1/decks</div>
+    </div>
+
+    <script type="module">
+      import { generateDeckViaDecken, insertIntoWpsPresentation } from '../shared/decken-bridge.mjs';
+
+      const tabOutline = document.getElementById('tabOutline');
+      const tabImprove = document.getElementById('tabImprove');
+      const panelOutline = document.getElementById('panelOutline');
+      const panelImprove = document.getElementById('panelImprove');
+      const outlineInput = document.getElementById('outlineInput');
+      const refInput = document.getElementById('refInput');
+      const fileInput = document.getElementById('fileInput');
+      const dropzone = document.getElementById('dropzone');
+      const imgPreview = document.getElementById('imgPreview');
+      const promptInput = document.getElementById('promptInput');
+      const apiKeyInput = document.getElementById('apiKey');
+      const engineSelect = document.getElementById('engineMode');
+      const runBtn = document.getElementById('runBtn');
+      const statusMsg = document.getElementById('statusMsg');
+
+      let mode = 'outline';
+      let sourceDataUrl = '';
+      let referenceDataUrl = '';
+      apiKeyInput.value = localStorage.getItem('decken.wps.apiKey') || '';
+
+      function setMode(next) {
+        mode = next;
+        tabOutline.classList.toggle('active', mode === 'outline');
+        tabImprove.classList.toggle('active', mode === 'improve');
+        panelOutline.style.display = mode === 'outline' ? 'block' : 'none';
+        panelImprove.style.display = mode === 'improve' ? 'block' : 'none';
+      }
+
+      tabOutline.addEventListener('click', () => setMode('outline'));
+      tabImprove.addEventListener('click', () => setMode('improve'));
+
+      refInput.addEventListener('change', () => {
+        const f = refInput.files?.[0];
+        if (!f) { referenceDataUrl = ''; return; }
+        const r = new FileReader();
+        r.onload = () => { referenceDataUrl = String(r.result || ''); };
+        r.readAsDataURL(f);
+      });
+
+      function loadSourceFile(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          sourceDataUrl = String(reader.result || '');
+          if (sourceDataUrl.startsWith('data:image/')) {
+            imgPreview.src = sourceDataUrl;
+            imgPreview.style.display = 'block';
+          } else {
+            imgPreview.style.display = 'none';
+          }
+          dropzone.textContent = '已加载: ' + file.name + '（点击更换）';
+        };
+        reader.readAsDataURL(file);
+      }
+
+      dropzone.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files?.[0]) loadSourceFile(fileInput.files[0]);
+      });
+
+      window.addEventListener('paste', (e) => {
+        for (const item of e.clipboardData?.items || []) {
+          if (item.type.startsWith('image/')) {
+            const f = item.getAsFile();
+            if (f) {
+              e.preventDefault();
+              setMode('improve');
+              loadSourceFile(f);
+              break;
+            }
+          }
+        }
+      });
+
+      runBtn.addEventListener('click', async () => {
+        runBtn.disabled = true;
+        localStorage.setItem('decken.wps.apiKey', apiKeyInput.value.trim());
+        statusMsg.textContent = '正在通过 api.decken.ai/v1/decks 编译原生 OpenXML…';
+        try {
+          const job = await generateDeckViaDecken({
+            ...(mode === 'outline'
+              ? { outline: outlineInput.value, ...(referenceDataUrl ? { reference: referenceDataUrl } : {}) }
+              : { source: sourceDataUrl, ...(promptInput.value ? { prompt: promptInput.value } : {}) }),
+            engineMode: engineSelect.value,
+            apiKey: apiKeyInput.value,
+          });
+          if (window.wps?.WpsApplication && job.pptxBase64) {
+            const res = insertIntoWpsPresentation(job.pptxBase64);
+            statusMsg.textContent = `✓ 已在第 ${res.afterIndex} 页后插入原生可编辑幻灯片（场景: ${job.scenario || 'deck'}）`;
+          } else if (job.pptxBase64) {
+            const bin = atob(job.pptxBase64);
+            const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+            const url = URL.createObjectURL(new Blob([bytes]));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${job.jobId}.pptx`;
+            a.click();
+            statusMsg.textContent = '✓ 已编译并下载可编辑 .pptx';
+          }
+        } catch (err) {
+          statusMsg.textContent = '错误: ' + (err.message || String(err));
+        } finally {
+          runBtn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jsplugins>
+  <jspluginonline
+    name="decken-wpp-addin"
+    type="wpp"
+    url="https://app.decken.ai/addin"
+    version="1.0.0"
+    enable="enable_dev"
+  />
+</jsplugins>

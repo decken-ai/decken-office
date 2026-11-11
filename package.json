@@ -1,0 +1,19 @@
+{
+  "name": "@decken/office",
+  "version": "1.1.0",
+  "description": "Official Decken Add-ins for Microsoft PowerPoint (Office.js 1.5) and WPS Office Presentation (wpp / WPS演示 JSAddin)",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "install:wps": "node ./wps/scripts/install-wps.mjs"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/decken-ai/decken-office.git"
+  },
+  "homepage": "https://docs.decken.ai/addin/installation"
+}

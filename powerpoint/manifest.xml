@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+  xsi:type="TaskPaneApp">
+  <Id>d8e4c1a0-7f2b-4c9e-9a3d-6b5f8e1c2a40</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Decken</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Decken — Slide Image to Native PPTX"/>
+  <Description DefaultValue="Reconstruct any slide screenshot, design draft, or PDF page into 100% native editable PowerPoint shapes, tables, and typography."/>
+  <IconUrl DefaultValue="https://app.decken.ai/addin/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://app.decken.ai/addin/icon-128.png"/>
+  <SupportUrl DefaultValue="https://docs.decken.ai"/>
+  <AppDomains>
+    <AppDomain>https://decken.ai</AppDomain>
+    <AppDomain>https://docs.decken.ai</AppDomain>
+    <AppDomain>https://app.decken.ai</AppDomain>
+    <AppDomain>https://api.decken.ai</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Presentation"/>
+  </Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.5">
+      <Set Name="PowerPointApi" MinVersion="1.5"/>
+    </Sets>
+  </Requirements>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://app.decken.ai/addin"/>
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Presentation">
+        <DesktopFormFactor>
+          <GetStarted>
+            <Title resid="Decken.GetStarted.Title"/>
+            <Description resid="Decken.GetStarted.Description"/>
+            <LearnMoreUrl resid="Decken.GetStarted.LearnMoreUrl"/>
+          </GetStarted>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="Decken.RibbonGroup">
+                <Label resid="Decken.GroupLabel"/>
+                <Icon>
+                  <bt:Image size="16" resid="Decken.Icon.16"/>
+                  <bt:Image size="32" resid="Decken.Icon.32"/>
+                  <bt:Image size="80" resid="Decken.Icon.80"/>
+                </Icon>
+                <Control xsi:type="Button" id="Decken.TaskpaneButton">
+                  <Label resid="Decken.TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="Decken.TaskpaneButton.Label"/>
+                    <Description resid="Decken.TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Decken.Icon.16"/>
+                    <bt:Image size="32" resid="Decken.Icon.32"/>
+                    <bt:Image size="80" resid="Decken.Icon.80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>Decken.Taskpane</TaskpaneId>
+                    <SourceLocation resid="Decken.Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Decken.Icon.16" DefaultValue="https://app.decken.ai/addin/icon-16.png"/>
+        <bt:Image id="Decken.Icon.32" DefaultValue="https://app.decken.ai/addin/icon-32.png"/>
+        <bt:Image id="Decken.Icon.80" DefaultValue="https://app.decken.ai/addin/icon-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Decken.GetStarted.LearnMoreUrl" DefaultValue="https://docs.decken.ai/addin/installation"/>
+        <bt:Url id="Decken.Taskpane.Url" DefaultValue="https://app.decken.ai/addin"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="Decken.GetStarted.Title" DefaultValue="Reconstruct slide images with Decken"/>
+        <bt:String id="Decken.GroupLabel" DefaultValue="Decken"/>
+        <bt:String id="Decken.TaskpaneButton.Label" DefaultValue="Reconstruct Slide"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="Decken.GetStarted.Description" DefaultValue="Turn any slide image or PDF page into native editable PowerPoint shapes and tables."/>
+        <bt:String id="Decken.TaskpaneButton.Tooltip" DefaultValue="Open the Decken task pane to reconstruct a slide image and insert native editable shapes directly into your presentation."/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>
